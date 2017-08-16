@@ -1,0 +1,4 @@
+software/*/
+tmp/
+projects/*/
+.DS_Store
