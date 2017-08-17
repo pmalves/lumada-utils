@@ -12,7 +12,7 @@ then
 	find /opt -iname common-funcs.sh -exec chmod +w {} \; -exec  perl -pi -e 's/-v "\$INSTALLDIR":"\$INTERNALHOMEDIR"/-v \$(hostname)-volume:\/opt/' {} \; -exec chmod -w {} \;
 
 	# Change the APPLICATION_run command to point to the shared volume
-	find /opt/*/bin -iname \*_run -exec perl -pi -e 's/-v \\"\$INSTALLDIR\\":\\"\$INTERNALHOMEDIR\\"/-v \$(hostname)-volume:\/opt/' {} \; -exec perl -pi -e 's/--net=host/--net=bridge/g' {} \;}
+	find /opt/*/bin -iname \*_run -exec perl -pi -e 's/-v \\"\$INSTALLDIR\\":\\"\$INTERNALHOMEDIR\\"/-v \$(hostname)-volume:\/opt/' {} \; -exec perl -pi -e 's/--net=host/--net=bridge/g' {} \;
 	
 	cd /opt/$APPLICATION
 	bin/${APPLICATION}_setup
