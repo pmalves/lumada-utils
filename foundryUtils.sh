@@ -160,28 +160,8 @@ else
 		if [ $operation == "L" ]
 		then
 
-			read -e -p "Do you want to start the image $build in debug mode? [y/N]: " -n 1 DEBUG
-
-			DEBUG=${DEBUG:-"n"}
 
 			source "$BASEDIR/setPorts.sh"
-
-			# Check for docker volumes
-			projectName=$(echo $build | egrep 'fu-' | cut -d' ' -f 1 | cut -d'-' -f 2)
-
-			if ! [ -z $projectName ] && [ -f $BASEDIR/projects/$projectName/config/dockerVolumes.sh ]
-			then
-				source "$BASEDIR/projects/$projectName/config/dockerVolumes.sh"
-
-				volumeList=""
-				for volume in "${VOLUMES[@]}" ; do
-
-					pathHost=${volume%%:*}
-					pathContainer=${volume#*:}
-
-					volumeList+=" -v $pathHost:$pathContainer"
-				done
-			fi
 
 			# Allow to specify a network for docker
 			
@@ -191,13 +171,7 @@ else
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
-                        
-			if [ $DEBUG == "y" ] || [ $DEBUG == "Y" ]
-			then
-				eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT -p $debugPort:8044 --name $build-debug --hostname $build-debug -e DEBUG=true $volumeList $build"
-			else
-				eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
-			fi
+			eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
 
 		fi
 

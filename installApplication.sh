@@ -56,7 +56,7 @@ mkdir -p $tmpDir
 
 if  [[ ! $( docker images | grep foundry-core ) ]]; then
 
-	echo Base imagee not found. Building foundry-core...
+	echo Base image not found. Building foundry-core...
 	docker build -t foundry-core -f dockerfiles/Dockerfile-FoundryCore dockerfiles
 
 fi
