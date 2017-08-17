@@ -3,10 +3,7 @@ MAINTAINER  Pedro Alves <palves@pentaho.com>
 
 # Set the locale
 
-#ENV LANG en_US.UTF-8  
-#ENV LANGUAGE en_US:en  
-#ENV LC_ALL en_US.UTF-8 
-#ENV TERM xterm
+ENV TERM xterm
 
 # For jdk7, install oracle-java7-installer
 # For jdk8, install oracle-java8-installer
