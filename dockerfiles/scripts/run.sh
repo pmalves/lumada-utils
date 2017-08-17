@@ -17,15 +17,8 @@ then
 fi
 
 
-# 1. Extract the software file
+# Run it...
 
-
-
-if [ -z "$DEBUG" ]; then
-  echo Starting Lumada in normal mode
-  echo ./start-pentaho.sh;
-else
-  echo Starting Lumada in debug mode
-  echo ./start-pentaho-debug.sh;
-fi
+cd /opt/$APPLICATION
+bin/${APPLICATION}_run
 
