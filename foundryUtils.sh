@@ -171,7 +171,7 @@ else
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
-			eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
+			eval "echo docker run -v $build-volume:/opt -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
 
 		fi
 

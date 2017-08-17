@@ -7,8 +7,8 @@ PORTS=( "lumadaCoreUIPort:443"
         "adminUIPort:8000"
         "rabbitMQMQTTSecurePort:8883"
         "rabbitMQMQTTUnsecurePort:1883"
-				"marathonPort:8080"
-				"chronosPort:8081"
+				#"marathonPort:8080"
+				#"chronosPort:8081"
       )
       
 NAMES=()
