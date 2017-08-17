@@ -1,3 +1,13 @@
+#!/bin/bash
+
+
+# 1. Extract the software file
+
+
+# cd /opt/lumada && \
+# 	tar -xvf ./*tgz -C . && \
+# 	./*/bin/install && \
+# 	echo DONE!
 
 if [ -z "$DEBUG" ]; then
   echo Starting Lumada in normal mode

@@ -12,7 +12,7 @@ LICENSES_DIR=licenses
 
 # Get list of files
 
-SOFTWAREFILES=$( ls -1 $SOFTWARE_DIR/*Lumada* )
+SOFTWAREFILES=$( ls -1 $SOFTWARE_DIR/*tgz )
 
 IFS=$'\n';
 n=-1
@@ -65,13 +65,17 @@ fi
 # 1 - Unzip everything
 # 2 - Call docker file
 
-mkdir $tmpDir/lumada
+mkdir $tmpDir/software
 
 # Because if the stupid file permissions, we have to unzip inside the container
-cp $softwareFile $tmpDir/lumada
+cp $softwareFile $tmpDir/software
 
 echo Creating docker image...
-docker build -t $DOCKERTAG -f dockerfiles/Dockerfile-Lumada dockerfiles
+docker build -t $DOCKERTAG -f dockerfiles/Dockerfile-Foundry dockerfiles
+
+echo Creating docker image volume
+docker volume create $DOCKERTAG-volume
+
 
 if [ $? -ne 0 ] 
 then

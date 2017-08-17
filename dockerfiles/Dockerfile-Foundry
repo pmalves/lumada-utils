@@ -1,0 +1,22 @@
+FROM foundry-core
+MAINTAINER  Pedro Alves <palves@pentaho.com>
+
+ADD scripts/run.sh /root/
+ADD tmp/software/ /root/software/
+
+RUN cd /root/software && \
+	DIR=$(basename *.tgz | cut -d - -f1 | tr '[:upper:]' '[:lower:]') && \
+	mkdir /opt/$DIR && \
+	tar -xvf ./*tgz -C /opt/$DIR && \
+	cd /opt/$DIR && \
+	./*/bin/install && \
+	echo DONE!
+
+VOLUME /opt
+WORKDIR /root
+
+
+# 1. Run 
+
+ENTRYPOINT ["bash", "/root/run.sh"]
+
