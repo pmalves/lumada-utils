@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BASEDIR=$(dirname $0)
-source "$BASEDIR/utils.sh"
+source "$BASEDIR/_utils.sh"
 cd $BASEDIR
 
 # Processes the main software files to build the main images.
@@ -43,7 +43,7 @@ promptUser "Softwares found on the $SOFTWARE_DIR dir:" $(( ${#OPTIONS[@]} - 1 ))
 softwareChoiceIdx=$CHOICE
 software=${OPTIONS[$CHOICE]}
 softwareFile=${SOFTWAREFILESARRAY[$softwareChoiceIdx]}
-DOCKERTAG=$(echo $software | sed -E -e ' s/.tgz//' | tr '[:upper:]' '[:lower:]')
+DOCKERTAG=$(echo foundry-$software | sed -E -e ' s/.tgz//' | tr '[:upper:]' '[:lower:]')
 
 # echo "Software chosen: $software ($softwareChoiceIdx); File: $softwareFile; Docker tag: $DOCKERTAG"
 
