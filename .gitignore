@@ -1,4 +1,4 @@
-software/*/
+software/[L]*
 tmp/
 projects/*/
 .DS_Store

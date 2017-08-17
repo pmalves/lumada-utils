@@ -8,7 +8,7 @@ cd $BASEDIR
 # The installation process is very different from CE and EE
 
 # EE:
-#   1) Extract main server while accepting the EULA
+#   1) Extract main software while accepting the EULA
 #   2) Extract the other plugins
 #   3) Extract the service packs
 #   4) Get licenses in place
@@ -21,31 +21,31 @@ LICENSES_DIR=licenses
 
 # Get list of files
 
-SERVERFILES=$( ls -1 $SOFTWARE_DIR/*/*server* )
+SOFTWAREFILES=$( ls -1 $SOFTWARE_DIR/*Lumada* )
 
 IFS=$'\n';
 n=-1
 
 echo
 
-SERVERFILESARRAY=()
+SOFTWAREFILESARRAY=()
 OPTIONS=();
 
-for serverFile in $SERVERFILES
+for softwareFile in $SOFTWAREFILES
 do
-	SERVERFILESARRAY=("${SERVERFILESARRAY[@]}" $serverFile)
-	OPTIONS=("${OPTIONS[@]}" $(echo $serverFile | cut -d / -f3) )
+	echo Software: $softwareFile
+	SOFTWAREFILESARRAY=("${SOFTWAREFILESARRAY[@]}" $softwareFile)
+	OPTIONS=("${OPTIONS[@]}" $(echo $softwareFile | cut -d / -f2) )
 done;
 
 
-promptUser "Servers found on the $SOFTWARE_DIR dir:" $(( ${#OPTIONS[@]} - 1 )) "Choose the server to install" 
-serverChoiceIdx=$CHOICE
-server=${OPTIONS[$CHOICE]}
-serverFile=${SERVERFILESARRAY[$serverChoiceIdx]}
-DOCKERTAG=$(echo $server | sed -E -e ' s/pentaho-/ba/; s/biserver/baserver/; s/(-dist)?\.zip//' | tr '[:upper:]' '[:lower:]')
+promptUser "Softwares found on the $SOFTWARE_DIR dir:" $(( ${#OPTIONS[@]} - 1 )) "Choose the software to install" 
+softwareChoiceIdx=$CHOICE
+software=${OPTIONS[$CHOICE]}
+softwareFile=${SOFTWAREFILESARRAY[$softwareChoiceIdx]}
+DOCKERTAG=$(echo $software | sed -E -e ' s/.tgz//' | tr '[:upper:]' '[:lower:]')
 
-# echo "Server chosen: $server ($serverChoiceIdx); File: $serverFile; Docker tag: $DOCKERTAG"
-
+# echo "Software chosen: $software ($softwareChoiceIdx); File: $softwareFile; Docker tag: $DOCKERTAG"
 
 # 4. Dynamically change the project-specific dockerfile to change the FROM
 tmpDir=dockerfiles/tmp
@@ -62,175 +62,26 @@ fi
 
 mkdir -p $tmpDir
 
-# Now - we need to check if we have the lumada-core docker image. Else, we need to build it
+# Now - we need to check if we have the foundry-core docker image. Else, we need to build it
 
-if  [[ ! $( docker images | grep lumada-core ) ]]; then
+if  [[ ! $( docker images | grep foundry-core ) ]]; then
 
-	echo Base imagee not found. Building lumada-core...
-	docker build -t lumada-core -f dockerfiles/Dockerfile-CoreLumada dockerfiles
-
-fi
-
-
-if [[ $server =~ -ce- ]]
-then
-
-	echo Unzipping files...
-	mkdir $tmpDir/pentaho
-	unzip $serverFile -d $tmpDir/pentaho > /dev/null
-
-	echo Creating docker image...
-	docker build -t $DOCKERTAG -f dockerfiles/Dockerfile-CE-FromFile dockerfiles
-
-
-else
-
-	# 1 - Unzip everything
-	# 2 - Present eula
-	# 3 - Call the installers
-	# 4 - Process the patches
-	# 5 - Copy the relevant stuff to Pentaho dir
-	# 6 - Copy licenses
-	# 7 - Call docker file
-
-	tmpDirInstallers=$tmpDir/installers
-	mkdir $tmpDirInstallers 
-
-	
-	echo Unzipping files...
-	for file in $( dirname $serverFile )/[^S]*ee*.zip
-	do 
-		unzip $file -d $tmpDirInstallers > /dev/null
-	done
-
-	# EULA
-	less $tmpDirInstallers/*server*/license.txt
-	echo
-	read -e -p "> Select 'Y' to accept the terms of the license agreement: " choice
-
-	choice=$( tr '[:lower:]' '[:upper:]' <<< "$choice" )
-
-	# Did the user accept it?
-	if ! [ $choice == "Y" ]; then
-		echo "Sorry, can't  continue without accepting the license agreement. Bye"
-		exit 1
-	fi
-
-	# 3 - Call the installers
-
-	tmpDirInstallers=$tmpDir/installers
-
-	mkdir $tmpDir/pentaho
-
-	# First, the server. Then the plugins. There's surely a smarter way to do this...
-	# I guess I'm just not smart enough
-
-	for dir in $tmpDirInstallers/*server*/
-	do
-		
-		targetDir="../../pentaho"
-		if [[ $dir =~ plugin ]]; then
-			targetDir=$( cd ../../pentaho/*server*/pentaho-solutions/system && pwd )
-		fi
-
-		echo Installing $dir...
-
-		pushd $dir > /dev/null
-
-		cat <<EOT > auto-install.xml
-<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
-<AutomatedInstallation langpack="eng"> 
-   <com.pentaho.engops.eula.izpack.PentahoHTMLLicencePanel id="licensepanel"/> 
-   <com.izforge.izpack.panels.target.TargetPanel id="targetpanel"> 
-      <installpath>$targetDir</installpath> 
-   </com.izforge.izpack.panels.target.TargetPanel> 
-   <com.izforge.izpack.panels.install.InstallPanel id="installpanel"/> 
-</AutomatedInstallation>
-EOT
-
-    java -jar installer.jar auto-install.xml > /dev/null
-
-		popd > /dev/null
-
-	done
-
-	for dir in $tmpDirInstallers/*plugin*/
-	do
-		
-		pushd $dir > /dev/null
-
-		targetDir="../../pentaho"
-		if [[ $dir =~ plugin ]]; then
-			targetDir=$( cd ../../pentaho/*server*/pentaho-solutions/system && pwd )
-		fi
-
-		echo Installing $dir...
-
-		cat <<EOT > auto-install.xml
-<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
-<AutomatedInstallation langpack="eng"> 
-   <com.pentaho.engops.eula.izpack.PentahoHTMLLicencePanel id="licensepanel"/> 
-   <com.izforge.izpack.panels.target.TargetPanel id="targetpanel"> 
-      <installpath>$targetDir</installpath> 
-   </com.izforge.izpack.panels.target.TargetPanel> 
-   <com.izforge.izpack.panels.install.InstallPanel id="installpanel"/> 
-</AutomatedInstallation>
-EOT
-
-    java -jar installer.jar auto-install.xml > /dev/null
-
-		popd > /dev/null
-
-	done
-
-	# 4 - Patches
-
-	tmpDirPatches=$tmpDir/patches
-	mkdir $tmpDirPatches
-
-	echo Unzipping patches...
-	tmpDirPentahoPatches=$tmpDirPatches/pentahoPatches
-	mkdir $tmpDirPentahoPatches
-
-	for file in $( dirname $serverFile )/[S]*zip
-	do 
-		if [ -f $file ]; then
-			unzip $file -d $tmpDirPatches > /dev/null
-		fi
-	done
-
-	# We're only interested in by server patches...
-	for patch in $tmpDirPatches/BIServer/*zip $tmpDirPatches/*/BIServer/*zip
-	do
-		if [ -f $patch ]; then
-			echo Processing $patch
-			unzip -o $patch -d $tmpDirPentahoPatches > /dev/null
-		fi
-	done
-
-	# Now we need to find all jars that are on the pentaho dir with the same name,
-	# delete them (old patches required this...) and copy all the stuff over
-
-	pushd $tmpDirPentahoPatches
-	find . -iname \*jar | while read jar
-	do
-
-		rm $( echo ../../pentaho/*server*/$jar | sed -E -e 's/(.*\/[^\]*-)[0-9]*.jar/\1/' )* 2>/dev/null
-
-	done
-
-	# and copy them...
-	cp -R * ../../pentaho/*server*/ > /dev/null 2>&1
-	popd
-
-	echo Copying licenses...
-	cp -R licenses $tmpDir
-
-	echo Creating docker image...
-	docker build -t $DOCKERTAG -f dockerfiles/Dockerfile-EE-FromFile dockerfiles
+	echo Base imagee not found. Building foundry-core...
+	docker build -t foundry-core -f dockerfiles/Dockerfile-FoundryCore dockerfiles
 
 fi
 
+
+# 1 - Unzip everything
+# 2 - Call docker file
+
+mkdir $tmpDir/lumada
+
+# Because if the stupid file permissions, we have to unzip inside the container
+cp $softwareFile $tmpDir/lumada
+
+echo Creating docker image...
+docker build -t $DOCKERTAG -f dockerfiles/Dockerfile-Lumada dockerfiles
 
 if [ $? -ne 0 ] 
 then
@@ -241,7 +92,7 @@ fi
 
 
 rm -rf $tmpDir
-echo Done. You may want to use the ./cbf2.sh command
+echo Done
 
 cd $BASEDIR
 exit 0
