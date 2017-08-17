@@ -149,7 +149,7 @@ else
 		if [ $operation == "D" ]
 		then
 			docker rmi $build
-			docker volume rm $build-volume
+			docker volume rm -f $build-volume
 			echo Removed successfully
 			exit 0
 		fi
