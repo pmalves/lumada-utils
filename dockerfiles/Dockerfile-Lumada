@@ -6,7 +6,7 @@ ADD tmp/lumada/ /opt/lumada/
 
 RUN cd /opt/lumada && \
 	tar -xvf ./*tgz -C . && \
-	./*/bin/install
+	./*/bin/install && \
 	echo DONE!
 
 WORKDIR /opt/lumada
