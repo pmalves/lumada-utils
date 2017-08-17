@@ -4,16 +4,7 @@ BASEDIR=$(dirname $0)
 source "$BASEDIR/_utils.sh"
 cd $BASEDIR
 
-# Processes the main software files to build the main images.
-# The installation process is very different from CE and EE
-
-# EE:
-#   1) Extract main software while accepting the EULA
-#   2) Extract the other plugins
-#   3) Extract the service packs
-#   4) Get licenses in place
-#   5) Call EE docker file
-
+# Processes the main foundry software files to build the main images.
 
 SOFTWARE_DIR=software
 LICENSES_DIR=licenses
@@ -47,7 +38,6 @@ DOCKERTAG=$(echo foundry-$software | sed -E -e ' s/.tgz//' | tr '[:upper:]' '[:l
 
 # echo "Software chosen: $software ($softwareChoiceIdx); File: $softwareFile; Docker tag: $DOCKERTAG"
 
-# 4. Dynamically change the project-specific dockerfile to change the FROM
 tmpDir=dockerfiles/tmp
 
 

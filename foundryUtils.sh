@@ -32,7 +32,7 @@ cd $BASEDIR
 DOCKER_CONTAINERS=()
 DOCKER_STATUS=()
 DOCKER_IDS=()
-DOCKER_IMAGES=()
+DOCKER_APPLICATIONS=()
 
 
 # Get list of files
@@ -40,7 +40,7 @@ DOCKER_IMAGES=()
 echo
 echo "--------------------------------------------------------------"
 echo "--------------------------------------------------------------"
-echo "-----------------         Foundry Utils   --------------------"
+echo "-----------------     Foundry  Utils     ---------------------"
 echo "------                 Version: $VERSION                    -------"
 echo "------ Author: Pedro Alves (pedro.alves@webdetails.pt) -------"
 echo "--------------------------------------------------------------"
@@ -48,33 +48,37 @@ echo "--------------------------------------------------------------"
 
 
 echo
-echo Foundry Applications
-echo ----------------------
+echo Foundry Application Images
+echo --------------------------
 echo
 
 
 # 1. Search for what we have
-IMAGES=$( docker images | egrep '^baserver' | cut -d' ' -f 1 )
+APPLICATIONS=$( docker images | egrep '^foundry' | grep -v 'foundry-core' | cut -d' ' -f 1 )
 
 IFS=$'\n';
 n=-1
 
-for image in $IMAGES
+for image in $APPLICATIONS
 do
   ((n++))
   echo " [$n] $image"
   BUILD[$n]=$image
-	TYPE[$n]="IMAGE"
+	TYPE[$n]="APPLICATION"
 done;
 
 
+
+
+# Not sure if we need this yet...
+
 echo
-echo Core containers available:
-echo --------------------------
+echo Foundry containers:
+echo -------------------
 echo 
 
 
-RUNNING_CONTAINERS=$( docker ps -a -f "name=baserver" --format "{{.ID}}XX{{.Names}}XX{{.Status}}XX{{.Image}}" | grep -v 'pdu-' )
+RUNNING_CONTAINERS=$( docker ps -a -f "name=foundry" --format "{{.ID}}XX{{.Names}}XX{{.Status}}XX{{.Image}}" | grep -v 'fu-' )
 
 for container in $RUNNING_CONTAINERS
 do
@@ -89,53 +93,7 @@ do
 
 	DOCKER_CONTAINERS[$n]=${ENTRY[2]}
 	DOCKER_IDS[$n]=${ENTRY[0]}
-  	DOCKER_IMAGES[$n]=${ENTRY[6]}
-	TYPE[$n]="CONTAINER"
-	echo " [$n] (${DOCKER_STATUS[$n]}): ${ENTRY[2]} "
-done
-
-
-echo
-echo Project images available:
-echo -------------------------
-echo
-
-
-# 1. Search for what we have
-IMAGES=$( docker images | egrep 'pdu-' | cut -d' ' -f 1 )
-IFS=$'\n';
-
-for image in $IMAGES
-do
-  ((n++))
-  echo " [$n] $image"
-  BUILD[$n]=$image
-	TYPE[$n]="IMAGE"
-done;
-
-
-echo
-echo Project containers available:
-echo -----------------------------
-echo 
-
-
-RUNNING_CONTAINERS=$( docker ps -a -f "name=pdu" --format "{{.ID}}XX{{.Names}}XX{{.Status}}XX{{.Image}}" )
-
-for container in $RUNNING_CONTAINERS
-do
-  ((n++))
-	IFS='XX' read -a ENTRY <<< "$container"
-
-	if [[ ${ENTRY[4]} =~ "Up " ]]; then
-		DOCKER_STATUS[$n]="Running"
-	else
-		DOCKER_STATUS[$n]="Stopped"
-	fi
-
-	DOCKER_CONTAINERS[$n]=${ENTRY[2]}
-	DOCKER_IDS[$n]=${ENTRY[0]}
-  	DOCKER_IMAGES[$n]=${ENTRY[6]}
+  	DOCKER_APPLICATIONS[$n]=${ENTRY[6]}
 	TYPE[$n]="CONTAINER"
 	echo " [$n] (${DOCKER_STATUS[$n]}): ${ENTRY[2]} "
 done
@@ -143,7 +101,7 @@ done
 
 
 echo
-read -e -p "> Select an entry number, [A] to add new image or [C] to create new project: " choice
+read -e -p "> Select an entry number, [A] to add new application: " choice
 
 choice=$( tr '[:lower:]' '[:upper:]' <<< "$choice" )
 
@@ -155,12 +113,7 @@ fi
 
 # Add a new image
 if [ $choice == "A" ]; then
-	source "$BASEDIR/softwareToCoreImages.sh"
-fi
-
-# Create project
-if [ $choice == "C" ]; then
-	source "$BASEDIR/buildProjectImages.sh"
+	source "$BASEDIR/installApplication.sh"
 fi
 
 
@@ -170,7 +123,7 @@ then
 	exit 1;
 else
 
-	if [ ${TYPE[$choice]} == "IMAGE" ]
+	if [ ${TYPE[$choice]} == "APPLICATION" ]
 	then
 
 		# Action over the images
@@ -213,7 +166,7 @@ else
 			source "$BASEDIR/setPorts.sh"
 
 			# Check for docker volumes
-			projectName=$(echo $build | egrep 'pdu-' | cut -d' ' -f 1 | cut -d'-' -f 2)
+			projectName=$(echo $build | egrep 'fu-' | cut -d' ' -f 1 | cut -d'-' -f 2)
 
 			if ! [ -z $projectName ] && [ -f $BASEDIR/projects/$projectName/config/dockerVolumes.sh ]
 			then
@@ -232,17 +185,17 @@ else
 			# Allow to specify a network for docker
 			
 			DOCKER_NETWORK_OPT=""
-			if [ -n ${CBF2_DOCKER_NETWORK} ]
+			if [ -n ${FOUNDRY_DOCKER_NETWORK} ]
 			then
-				DOCKER_NETWORK_OPT="--net=${CBF2_DOCKER_NETWORK}"
+				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
                         
 			if [ $DEBUG == "y" ] || [ $DEBUG == "Y" ]
 			then
-				eval "docker run $exposePorts $DOCKER_NETWORK_OPT -p $debugPort:8044 --name $build-debug --hostname $build-debug -e DEBUG=true $volumeList $build"
+				eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT -p $debugPort:8044 --name $build-debug --hostname $build-debug -e DEBUG=true $volumeList $build"
 			else
-				eval "docker run $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
+				eval "echo docker run $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
 			fi
 
 		fi
@@ -251,8 +204,9 @@ else
 
 		if [ $operation == "I" ]
 		then
-
-			docker run --entrypoint bash -i -t --rm $build
+			
+			echo Inspecting $build. Hostname is $build
+			docker run -v /var/run/docker.sock:/var/run/docker.sock -h $build --entrypoint bash -i -t --rm $build
 			exit 0
 
 		fi
@@ -260,7 +214,7 @@ else
 	else
 
 		# Action over the containers
-		dockerId=${DOCKER_IMAGES[$choice]}
+		dockerId=${DOCKER_APPLICATIONS[$choice]}
         dockerImage=${DOCKER_CONTAINERS[$choice]}
 
 		echo
@@ -333,75 +287,6 @@ else
 				exit 0
 			fi
 
-			if [ $operation == "E" ]; then
-
-				read -e -p "Username for the export operation? [admin]: " user
-				user=${user:-admin}
-				read -e -p "Password for the export operation? [password]: " password
-				password=${password:-password}
-
-				project=$(echo $dockerImage | sed -E -e 's/pdu-(.*)-baserver.*/\1/ ' )
-				serverDir=ee;
-				if [[ $dockerImage =~ ce ]]; then
-					serverDir=ce;
-				fi
-
-				echo "Exporting $dockerImage to project $project."
-				
-				echo "Please note that by design CBF2 only exports the folders in public that are already part of the project. You'll need to manually create the directory if you add a top level one."
-				echo
-
-				pushd projects/$project/solution/public/ > /dev/null
-				
-				DIRS=$( ls -d -1 */ )
-				IFS=$'\n';
-
-				for dir in $DIRS
-				do
-					dir=$( echo $dir | sed -E -e 's/\/$//')
-					echo Exporting public/$dir...
-
-					docker exec $dockerImage bash -c "cd /pentaho/*server* ; ./import-export.sh --export -a http://127.0.0.1:8080/pentaho -u $user -p $password  -w true -fp /pentaho/export.zip -f /public/$dir"
-					docker cp $dockerImage:/pentaho/export.zip .
-					unzip -o export.zip > /dev/null
-					rm export.zip
-
-				done;
-
-				echo
-
-				popd > /dev/null
-
-			fi
-
-			if [ $operation == "I" ]; then
-
-				read -e -p "Username for the import operation? [admin]: " user
-				user=${user:-admin}
-				read -e -p "Password for the import operation? [password]: " password
-				password=${password:-password}
-
-				project=$(echo $dockerImage | sed -E -e 's/pdu-(.*)-baserver.*/\1/ ' )
-				serverDir=ee;
-				if [[ $dockerImage =~ ce ]]; then
-					serverDir=ce;
-				fi
-
-				echo "Importing project $project to $dockerImage..."
-
-				# Zipping the files
-				pushd projects/$project/solution/ > /dev/null
-				zip -r import.zip public -x "*.DS_Store"
-
-				# Sending it and importing
-				docker cp import.zip $dockerImage:/pentaho/ 
-				
-				docker exec $dockerImage bash -c "cd /pentaho/*server* ; ./import-export.sh --import -a http://127.0.0.1:8080/pentaho -u $user -p $password -fp /pentaho/import.zip -r true --permission=true -f / -c UTF-8 -o true > /dev/null "
-
-				rm import.zip
-				popd > /dev/null
-
-			fi
 
 		else
 
