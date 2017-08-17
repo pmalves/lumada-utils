@@ -166,7 +166,7 @@ else
 			# Allow to specify a network for docker
 			
 			DOCKER_NETWORK_OPT=""
-			if [ -n ${FOUNDRY_DOCKER_NETWORK} ]
+			if [ ! -z ${FOUNDRY_DOCKER_NETWORK+x} ]
 			then
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
