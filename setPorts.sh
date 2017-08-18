@@ -61,10 +61,17 @@ for port in "${PORTS[@]}" ; do
     
 done
 
+FOUNDRY_BINDING_INTERFACE_OPT=""
+if [ ! -z ${FOUNDRY_BINDING_INTERFACE+x} ]
+then
+	FOUNDRY_BINDING_INTERFACE_OPT="${FOUNDRY_BINDING_INTERFACE}:"
+fi
+
+
 exposePorts=""
 for index in ${!NAMES[*]}
 do
-    exposePorts+=" -p ${USED[$index]}:${DEFAULTS[$index]}"
+    exposePorts+=" -p ${FOUNDRY_BINDING_INTERFACE_OPT}${USED[$index]}:${DEFAULTS[$index]}"
 done
 
 #echo $exposePorts
