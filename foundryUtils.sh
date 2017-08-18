@@ -212,7 +212,7 @@ else
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
-			eval "docker run -v $build-volume:/opt -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --hostname $build $volumeList $build"
+			eval "docker run -v $build-volume:/opt -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --net=host --hostname $build $volumeList $build"
 
 		fi
 
@@ -222,8 +222,7 @@ else
 		then
 			
 			echo Inspecting $build. Hostname is $build.
-			docker run -v $build-volume:/opt -v /var/run/docker.sock:/var/run/docker.sock -h $build --entrypoint bash -i -t --rm $build
-			#docker run -v /var/run/docker.sock:/var/run/docker.sock -h $build --entrypoint bash -i -t --rm $build
+			docker run -v $build-volume:/opt -v /var/run/docker.sock:/var/run/docker.sock --net=host -h $build --entrypoint bash -i -t --rm $build
 			exit 0
 
 		fi

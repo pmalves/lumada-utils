@@ -10,7 +10,7 @@ then
 
 	# Change the common-funcs.sh and other run scripts to point to the shared volume and use bridge mode
 
-	find /opt \( -iname common-funcs.sh -o -iname '*run' \) -exec chmod +w {} \; -exec  perl -pi -e 's/-v \\?"\$INSTALLDIR\\?":\\?"\$INTERNALHOMEDIR\\?"/-v \$(hostname)-volume:\/opt/;s/--net=host/--net=bridge/g' {} \; -exec chmod -w {} \;
+	find /opt \( -iname common-funcs.sh -o -iname '*run' \) -exec chmod +w {} \; -exec  perl -pi -e 's/-v \\?"\$INSTALLDIR\\?":\\?"\$INTERNALHOMEDIR\\?"/-v \$(hostname)-volume:\/opt/;' {} \; -exec chmod -w {} \;
 
 	
 	cd /opt/$APPLICATION
