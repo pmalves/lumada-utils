@@ -99,17 +99,34 @@ do
 done
 
 echo
+echo Foundry volumes:
+echo ----------------
+echo
+
+
+VOLUMES=$( docker volume ls | grep foundry | awk '{print $2}' )
+
+IFS=$'\n';
+
+for image in $VOLUMES
+do
+  ((n++))
+  echo " [$n] $image"
+  BUILD[$n]=$image
+	TYPE[$n]="VOLUME"
+done;
+
+
+
+echo
 echo Foundry runtime services:
 echo -------------------------
 echo
-
 
 # Runtime Services
 RUNTIME_SERVICES=$( docker images | egrep '^com.hds|watchdog' | cut -d' ' -f 1 )
 
 IFS=$'\n';
-n=-1
-
 for image in $RUNTIME_SERVICES
 do
   echo "     $image"
@@ -211,6 +228,44 @@ else
 
 		fi
 
+	elif [ ${TYPE[$choice]} == "VOLUME" ]
+	then
+
+		# Action over the images
+		build=${BUILD[$choice]}
+
+		echo
+		echo You selected the volume $build
+		echo
+
+		read -e -p "> What do you want to do? (D)elete the volume or (R)eset it? [R]: " operation
+		operation=${operation:-R}
+
+		operation=$( tr '[:lower:]' '[:upper:]' <<< "$operation" )
+
+		if ! [ $operation == "D" ] && ! [ $operation == "R" ] 
+		then
+			echo Invalid selection
+			exit 1;
+		fi
+
+		# Are we deleting it?
+
+		if [ $operation == "D" ]
+		then
+			docker volume rm -f $build
+			echo Removed successfully
+			exit 0
+		fi
+
+		# Are we resetting it?
+		if [ $operation == "R" ]
+		then
+			docker volume rm -f $build
+			docker volume create $build
+			echo Successfully reset
+			exit 0
+		fi
 	else
 
 		# Action over the containers
