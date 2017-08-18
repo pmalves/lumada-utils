@@ -98,10 +98,27 @@ do
 	echo " [$n] (${DOCKER_STATUS[$n]}): ${ENTRY[2]} "
 done
 
+echo
+echo Foundry runtime services:
+echo -------------------------
+echo
+
+
+# Runtime Services
+RUNTIME_SERVICES=$( docker images | egrep '^com.hds|watchdog' | cut -d' ' -f 1 )
+
+IFS=$'\n';
+n=-1
+
+for image in $RUNTIME_SERVICES
+do
+  echo "     $image"
+done;
+
 
 
 echo
-read -e -p "> Select an entry number, [A] to add new application: " choice
+read -e -p "> Select an entry number, [A] to add new application, [W] to wipe out services: " choice
 
 choice=$( tr '[:lower:]' '[:upper:]' <<< "$choice" )
 
@@ -114,6 +131,13 @@ fi
 # Add a new image
 if [ $choice == "A" ]; then
 	source "$BASEDIR/installApplication.sh"
+	exit 0;
+fi
+
+# Wipe services
+if [ $choice == "W" ]; then
+	source "$BASEDIR/wipeRuntimeServices.sh"
+	exit 0;
 fi
 
 
