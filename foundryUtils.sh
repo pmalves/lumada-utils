@@ -218,7 +218,7 @@ else
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
-			docker run -v $build-volume:/opt -e CONTAINER_ID=$build ${CONTAINER_IP_OPT} -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --net=host $volumeList $build
+			eval "docker run -v $build-volume:/opt -e CONTAINER_ID=$build ${CONTAINER_IP_OPT} -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --net=host $volumeList $build"
 
 		fi
 
