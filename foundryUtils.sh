@@ -198,6 +198,12 @@ else
 
 		# Are we launching it?
 
+		CONTAINER_IP_OPT=""
+		if [ ! -z ${FOUNDRY_BINDING_INTERFACE+x} ]
+		then
+			CONTAINER_IP_OPT="-e CONTAINER_IP=${FOUNDRY_BINDING_INTERFACE}"
+		fi
+
 		if [ $operation == "L" ]
 		then
 
@@ -212,7 +218,7 @@ else
 				DOCKER_NETWORK_OPT="--net=${FOUNDRY_DOCKER_NETWORK}"
 			fi
 
-			docker run -v $build-volume:/opt -e CONTAINER_ID=$build -e CONTAINER_IP=${FOUNDRY_BINDING_INTERFACE} -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --net=host $volumeList $build
+			docker run -v $build-volume:/opt -e CONTAINER_ID=$build ${CONTAINER_IP_OPT} -v /var/run/docker.sock:/var/run/docker.sock $exposePorts $DOCKER_NETWORK_OPT --name $build --net=host $volumeList $build
 
 		fi
 
@@ -221,8 +227,9 @@ else
 		if [ $operation == "I" ]
 		then
 			
+
 			echo Inspecting $build. Hostname is $build.
-			docker run -v $build-volume:/opt -e CONTAINER_ID=$build -e CONTAINER_IP=${FOUNDRY_BINDING_INTERFACE} -v /var/run/docker.sock:/var/run/docker.sock --net=host  --entrypoint bash -i -t --rm $build
+			docker run -v $build-volume:/opt -e CONTAINER_ID=$build ${CONTAINER_IP_OPT} -v /var/run/docker.sock:/var/run/docker.sock --net=host  --entrypoint bash -i -t --rm $build
 			exit 0
 
 		fi
